@@ -2,6 +2,7 @@ package com.stlmkvd.aston_contacts
 
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.PersistableBundle
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
@@ -16,13 +17,47 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        supportFragmentManager.commit {
-            replace(R.id.fragment_container_list, ContactsListFragment::class.java, null)
-            addToBackStack("")
-            setReorderingAllowed(true)
+        if (savedInstanceState != null) {
+            val fragment =
+                supportFragmentManager.getFragment(savedInstanceState, ContactsListFragment.TAG)
+            fragment?.let {
+                supportFragmentManager.commit {
+                    replace(
+                        R.id.fragment_container_list,
+                        it,
+                        ContactsListFragment.TAG
+                    )
+                    addToBackStack("open contacts list")
+                    setReorderingAllowed(true)
+                }
+            }
+
+        } else {
+            supportFragmentManager.commit {
+                replace(
+                    R.id.fragment_container_list,
+                    ContactsListFragment::class.java,
+                    null,
+                    ContactsListFragment.TAG
+                )
+                addToBackStack("")
+                setReorderingAllowed(true)
+            }
         }
         grantPermissons()
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
+        super.onSaveInstanceState(outState, outPersistentState)
+        val currFragment = supportFragmentManager.findFragmentByTag(ContactsListFragment.TAG)
+        currFragment?.let {
+            supportFragmentManager.putFragment(
+                outState,
+                ContactsListFragment.TAG,
+                it
+            )
+        }
     }
 
     private fun grantPermissons() {

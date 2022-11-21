@@ -30,7 +30,21 @@ class ContactsListFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (savedInstanceState != null) {
+            val savedFragment =
+                childFragmentManager.getFragment(savedInstanceState, ContactDetailsFragment.TAG)
+            savedFragment?.let {
+                childFragmentManager.commit {
+                    replace(
+                        R.id.fragment_container_details,
+                        it,
+                        ContactDetailsFragment.TAG
+                    )
+                }
+            }
+        }
         viewModel = ViewModelProvider(this).get(ContactsViewModel::class.java)
+        Log.d(TAG, "oncreate")
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -41,6 +55,7 @@ class ContactsListFragment : Fragment() {
         binding = FragmentContactsListBinding.inflate(inflater, container, false)
         contactsAdapter = ContactsAdapter()
         binding.recyclerView.adapter = contactsAdapter
+        Log.d(TAG, "oncreateview")
         return binding.root
     }
 
@@ -59,6 +74,7 @@ class ContactsListFragment : Fragment() {
         })
         binding.slidingLayout.lockMode = SlidingPaneLayout.LOCK_MODE_LOCKED
         showOrHideHint()
+        Log.d(TAG, "onViewCreated")
     }
 
     override fun onStart() {
@@ -69,7 +85,7 @@ class ContactsListFragment : Fragment() {
             SAVE_CONTACT_REQUEST_KEY,
             viewLifecycleOwner
         ) { _, bundle ->
-            binding.slidingLayout.closePane()
+            if (binding.slidingLayout.closePane()) childFragmentManager.popBackStack()
             val contact = bundle.getSerializable(ARG_SERIALIZED_CONTACT) as Contact?
                 ?: throw IllegalArgumentException("you should put serialized contact in bundle")
             if (contact.id != null) {
@@ -85,26 +101,26 @@ class ContactsListFragment : Fragment() {
             viewLifecycleOwner
         ) { _, bundle ->
             binding.slidingLayout.closePane()
+            childFragmentManager.popBackStack()
             val contact = bundle.getSerializable(ARG_SERIALIZED_CONTACT) as Contact?
                 ?: throw IllegalArgumentException("you should put serialized contact in bundle")
             if (contact.id != null) {
                 val index = viewModel.deleteContact(contact)
-                Log.d(TAG, index.toString())
                 contactsAdapter.notifyItemRemoved(index)
             }
             val currFragment = childFragmentManager.findFragmentByTag(ContactDetailsFragment.TAG)
-            currFragment?.let {
-                childFragmentManager.commit {
-                    remove(it)
-                }
-            }
+
         }
 
+        //set onBackPressed listener in activity
         with(requireActivity()) {
             onBackPressedDispatcher.addCallback {
-                if (!binding.slidingLayout.closePane()) finish()
+                val paneClosed = binding.slidingLayout.closePane()
+                if (paneClosed) childFragmentManager.popBackStack()
+                else finish()
             }
         }
+        Log.d(TAG, "onStart")
     }
 
     private fun showOrHideHint() {
@@ -113,7 +129,7 @@ class ContactsListFragment : Fragment() {
         } else binding.hint.visibility = View.GONE
     }
 
-    private fun onContactSelected(contact: Contact) {
+    private fun openDetailsFor(contact: Contact) {
         val bundle = Bundle().apply { putSerializable(ARG_SERIALIZED_CONTACT, contact) }
         childFragmentManager.commit {
             replace(
@@ -122,10 +138,22 @@ class ContactsListFragment : Fragment() {
                 bundle,
                 ContactDetailsFragment.TAG
             )
-            addToBackStack("")
+            addToBackStack("open details")
             setReorderingAllowed(true)
         }
         binding.slidingLayout.openPane()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        val currFragment = childFragmentManager.findFragmentByTag(ContactDetailsFragment.TAG)
+        currFragment?.let {
+            childFragmentManager.putFragment(
+                outState,
+                ContactDetailsFragment.TAG,
+                it
+            )
+        }
     }
 
     private inner class ContactsAdapter : ListAdapter<Contact, ContactHolder>(ContactDiffCallback) {
@@ -147,7 +175,7 @@ class ContactsListFragment : Fragment() {
             binding.contact = contact
             binding.executePendingBindings()
             binding.root.setOnClickListener {
-                onContactSelected(contact)
+                openDetailsFor(contact)
             }
         }
     }

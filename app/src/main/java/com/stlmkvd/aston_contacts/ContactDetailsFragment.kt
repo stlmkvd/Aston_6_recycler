@@ -2,6 +2,7 @@ package com.stlmkvd.aston_contacts
 
 import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,6 +25,7 @@ class ContactDetailsFragment : Fragment() {
                 ?: throw IllegalArgumentException("you should pass serialized contact to the bundle")
             else -> Contact()
         }
+        Log.d(TAG, "onCreate")
     }
 
     override fun onCreateView(
@@ -37,6 +39,7 @@ class ContactDetailsFragment : Fragment() {
             val bitmap = BitmapFactory.decodeByteArray(it, 0, it.size)
             binding.ivPhoto.setImageBitmap(bitmap)
         }
+        Log.d(TAG, "onCreateView")
         return binding.root
     }
 
@@ -51,6 +54,7 @@ class ContactDetailsFragment : Fragment() {
                 Toast.LENGTH_SHORT
             ).show()
         }
+        Log.d(TAG, "onViewCreated")
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
