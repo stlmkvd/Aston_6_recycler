@@ -18,6 +18,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         supportFragmentManager.commit {
             replace(R.id.fragment_container_list, ContactsListFragment::class.java, null)
+            addToBackStack("")
+            setReorderingAllowed(true)
         }
         grantPermissons()
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)

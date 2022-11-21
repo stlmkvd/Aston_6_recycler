@@ -71,7 +71,7 @@ class ContactsListFragment : Fragment() {
         ) { _, bundle ->
             binding.slidingLayout.closePane()
             val contact = bundle.getSerializable(ARG_SERIALIZED_CONTACT) as Contact?
-                ?: throw IllegalArgumentException("value is null")
+                ?: throw IllegalArgumentException("you should put serialized contact in bundle")
             if (contact.id != null) {
                 val index = viewModel.updateExistingContact(contact)
                 contactsAdapter.notifyItemChanged(index)
@@ -86,11 +86,17 @@ class ContactsListFragment : Fragment() {
         ) { _, bundle ->
             binding.slidingLayout.closePane()
             val contact = bundle.getSerializable(ARG_SERIALIZED_CONTACT) as Contact?
-                ?: throw IllegalArgumentException("value is null")
+                ?: throw IllegalArgumentException("you should put serialized contact in bundle")
             if (contact.id != null) {
                 val index = viewModel.deleteContact(contact)
                 Log.d(TAG, index.toString())
                 contactsAdapter.notifyItemRemoved(index)
+            }
+            val currFragment = childFragmentManager.findFragmentByTag(ContactDetailsFragment.TAG)
+            currFragment?.let {
+                childFragmentManager.commit {
+                    remove(it)
+                }
             }
         }
 
@@ -110,7 +116,14 @@ class ContactsListFragment : Fragment() {
     private fun onContactSelected(contact: Contact) {
         val bundle = Bundle().apply { putSerializable(ARG_SERIALIZED_CONTACT, contact) }
         childFragmentManager.commit {
-            replace(R.id.fragment_container_details, ContactDetailsFragment::class.java, bundle)
+            replace(
+                R.id.fragment_container_details,
+                ContactDetailsFragment::class.java,
+                bundle,
+                ContactDetailsFragment.TAG
+            )
+            addToBackStack("")
+            setReorderingAllowed(true)
         }
         binding.slidingLayout.openPane()
     }

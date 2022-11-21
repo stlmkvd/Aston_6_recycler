@@ -73,6 +73,7 @@ class ContactDetailsFragment : Fragment() {
         writeChangesToObj(contact)
         val bundle = Bundle().apply { putSerializable(ARG_SERIALIZED_CONTACT, contact) }
         setFragmentResult(SAVE_CONTACT_REQUEST_KEY, bundle)
+        view?.clearFocus()
     }
 
     companion object {
