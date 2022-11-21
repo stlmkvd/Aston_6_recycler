@@ -1,5 +1,6 @@
 package com.stlmkvd.aston_contacts
 
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -32,6 +33,10 @@ class ContactDetailsFragment : Fragment() {
         binding = FragmentContactDetailsBinding.inflate(inflater, container, false)
         binding.contact = contact
         binding.executePendingBindings()
+        contact.thumbnailPhoto?.let {
+            val bitmap = BitmapFactory.decodeByteArray(it, 0, it.size)
+            binding.ivPhoto.setImageBitmap(bitmap)
+        }
         return binding.root
     }
 

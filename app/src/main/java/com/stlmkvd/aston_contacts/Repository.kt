@@ -3,6 +3,7 @@ package com.stlmkvd.aston_contacts
 import android.content.ContentProviderOperation
 import android.content.ContentResolver
 import android.content.ContentValues
+import android.graphics.BitmapFactory
 import android.provider.ContactsContract
 
 class Repository private constructor(private val contentResolver: ContentResolver) {
@@ -52,7 +53,9 @@ class Repository private constructor(private val contentResolver: ContentResolve
                         ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE -> {
                             email = getString(5)
                         }
-                        else -> thumbnailPhoto = getString(6)
+                        else -> {
+                            thumbnailPhoto = getBlob(6)
+                        }
                     }
                 }
                 moveToNext()
@@ -115,18 +118,18 @@ class Repository private constructor(private val contentResolver: ContentResolve
                 }).build()
             operations.add(insertNewEmail)
         }
-        if (contact.thumbnailPhoto != null) {
-            val insertNewThumbnailPhoto = ContentProviderOperation.newInsert(uri)
-                .withValues(ContentValues().apply {
-                    put(ContactsContract.Data.RAW_CONTACT_ID, contact.id)
-                    put(
-                        ContactsContract.Data.MIMETYPE,
-                        ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE
-                    )
-                    put(ContactsContract.CommonDataKinds.Photo.PHOTO, contact.thumbnailPhoto)
-                }).build()
-            operations.add(insertNewThumbnailPhoto)
-        }
+//        if (contact.thumbnailPhoto != null) {
+//            val insertNewThumbnailPhoto = ContentProviderOperation.newInsert(uri)
+//                .withValues(ContentValues().apply {
+//                    put(ContactsContract.Data.RAW_CONTACT_ID, contact.id)
+//                    put(
+//                        ContactsContract.Data.MIMETYPE,
+//                        ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE
+//                    )
+//                    put(ContactsContract.CommonDataKinds.Photo.PHOTO, contact.thumbnailPhoto)
+//                }).build()
+//            operations.add(insertNewThumbnailPhoto) TODO PHOTO ADD
+//        }
         contentResolver.applyBatch(ContactsContract.AUTHORITY, operations)
     }
 
