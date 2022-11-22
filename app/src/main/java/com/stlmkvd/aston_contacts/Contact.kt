@@ -8,16 +8,21 @@ data class Contact(
     var lastName: String? = null,
     var phoneNumber: String? = null,
     var email: String? = null,
-    var thumbnailPhoto: ByteArray? = null
+    var thumbnailPhoto: Bitmap? = null
 ) : java.io.Serializable {
 
-    val isEmpty: Boolean
+    val hasDetails: Boolean
+        get() = email != null || thumbnailPhoto != null
+
+    val isNew: Boolean
+        get() = id == null
+
+    val hasAllDataEmpty: Boolean
         get() {
             return firstName == null &&
                     lastName == null &&
                     phoneNumber == null &&
-                    email == null &&
-                    thumbnailPhoto == null
+                    email == null
         }
 
     fun getDisplayedName(): String{
@@ -35,10 +40,7 @@ data class Contact(
         if (lastName != other.lastName) return false
         if (phoneNumber != other.phoneNumber) return false
         if (email != other.email) return false
-        if (thumbnailPhoto != null) {
-            if (other.thumbnailPhoto == null) return false
-            if (!thumbnailPhoto.contentEquals(other.thumbnailPhoto)) return false
-        } else if (other.thumbnailPhoto != null) return false
+        if (thumbnailPhoto != other.thumbnailPhoto) return false
 
         return true
     }
@@ -49,7 +51,7 @@ data class Contact(
         result = 31 * result + (lastName?.hashCode() ?: 0)
         result = 31 * result + (phoneNumber?.hashCode() ?: 0)
         result = 31 * result + (email?.hashCode() ?: 0)
-        result = 31 * result + (thumbnailPhoto?.contentHashCode() ?: 0)
+        result = 31 * result + (thumbnailPhoto?.hashCode() ?: 0)
         return result
     }
 

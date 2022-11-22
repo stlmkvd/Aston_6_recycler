@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.addCallback
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
 import androidx.lifecycle.ViewModelProvider
@@ -92,8 +93,6 @@ class ContactsListFragment : Fragment() {
             DELETE_CONTACT_REQUEST_KEY,
             viewLifecycleOwner
         ) { _, bundle ->
-            binding.slidingLayout.closePane()
-            childFragmentManager.popBackStack()
             val contact = bundle.getSerializable(ARG_SERIALIZED_CONTACT) as Contact?
                 ?: throw IllegalArgumentException("you should put serialized contact in bundle")
             deleteContact(contact)
@@ -111,26 +110,27 @@ class ContactsListFragment : Fragment() {
     }
 
     private fun saveContact(contact: Contact) {
-        closeDetails()
-        if (contact.id != null) {
-            val index = viewModel.updateExistingContact(contact)
-            contactsAdapter.notifyItemChanged(index)
-        } else {
-            val index = viewModel.saveNewContact(contact)
-            TODO()
+        closeDetailsIfCloseable()
+        when {
+            contact.isNew -> TODO("adding will be implemented")
+            contact.hasAllDataEmpty -> deleteContact(contact)
+            else -> {
+                val index = viewModel.updateExistingContact(contact)
+                contactsAdapter.notifyItemChanged(index)
+            }
         }
     }
 
     private fun deleteContact(contact: Contact) {
-        closeDetails()
+        closeDetailsIfCloseable()
         childFragmentManager.popBackStack()
-        if (contact.id != null) {
+        if (!contact.isNew) {
             val index = viewModel.deleteContact(contact)
             contactsAdapter.notifyItemRemoved(index)
         }
     }
 
-    private fun closeDetails() {
+    private fun closeDetailsIfCloseable() {
         if (binding.slidingLayout.closePane()) childFragmentManager.popBackStack()
     }
 
@@ -170,7 +170,6 @@ class ContactsListFragment : Fragment() {
     private inner class ContactsAdapter : ListAdapter<Contact, ContactHolder>(ContactDiffCallback) {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ContactHolder {
             val binding = ListItemContactBinding.inflate(layoutInflater, parent, false)
-            binding.lifecycleOwner = this@ContactsListFragment.viewLifecycleOwner
             return ContactHolder(binding)
         }
 
@@ -185,6 +184,14 @@ class ContactsListFragment : Fragment() {
         fun bind(contact: Contact) {
             binding.contact = contact
             binding.executePendingBindings()
+            if (contact.thumbnailPhoto == null) binding.ivPhoto.setImageDrawable(
+                ResourcesCompat.getDrawable(
+                    resources,
+                    R.drawable.profile,
+                    null
+                )
+            )
+            else binding.ivPhoto.setImageBitmap(contact.thumbnailPhoto)
             binding.root.setOnClickListener {
                 openDetailsFor(contact)
             }
@@ -193,7 +200,7 @@ class ContactsListFragment : Fragment() {
 
     private object ContactDiffCallback : DiffUtil.ItemCallback<Contact>() {
         override fun areItemsTheSame(oldItem: Contact, newItem: Contact): Boolean {
-            return oldItem.phoneNumber == newItem.phoneNumber
+            return oldItem.id == newItem.id
         }
 
         override fun areContentsTheSame(oldItem: Contact, newItem: Contact): Boolean {

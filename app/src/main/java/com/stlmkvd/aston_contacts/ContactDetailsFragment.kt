@@ -2,6 +2,8 @@ package com.stlmkvd.aston_contacts
 
 import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -10,6 +12,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResult
 import com.stlmkvd.aston_contacts.databinding.FragmentContactDetailsBinding
+import kotlin.reflect.KMutableProperty1
 
 class ContactDetailsFragment : Fragment() {
 
@@ -25,7 +28,7 @@ class ContactDetailsFragment : Fragment() {
                 ?: throw IllegalArgumentException("you should pass serialized contact to the bundle")
             else -> Contact()
         }
-        Log.d(TAG, "onCreate")
+        Log.d(TAG, contact.toString())
     }
 
     override fun onCreateView(
@@ -36,8 +39,7 @@ class ContactDetailsFragment : Fragment() {
         binding.contact = contact
         binding.executePendingBindings()
         contact.thumbnailPhoto?.let {
-            val bitmap = BitmapFactory.decodeByteArray(it, 0, it.size)
-            binding.ivPhoto.setImageBitmap(bitmap)
+            binding.ivPhoto.setImageBitmap(it)
         }
         Log.d(TAG, "onCreateView")
         return binding.root
@@ -47,6 +49,10 @@ class ContactDetailsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.btnSaveContact.setOnClickListener { onSaveButtonPressed() }
         binding.btnDeleteContact.setOnClickListener { onDeleteButtonPressed() }
+        binding.etFirstname.editText?.addTextChangedListener(FieldWatcher(contact, Contact::firstName))
+        binding.etLastName.editText?.addTextChangedListener(FieldWatcher(contact, Contact::lastName))
+        binding.etPhone.editText?.addTextChangedListener(FieldWatcher(contact, Contact::phoneNumber))
+        binding.etEmail.editText?.addTextChangedListener(FieldWatcher(contact, Contact::email))
         binding.ivPhoto.setOnClickListener {
             Toast.makeText(
                 requireContext(),
@@ -58,19 +64,8 @@ class ContactDetailsFragment : Fragment() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        writeChangesToObj(contact)
         outState.putSerializable(ARG_SERIALIZED_CONTACT, contact)
         super.onSaveInstanceState(outState)
-    }
-
-    private fun writeChangesToObj(contact: Contact) {
-        contact.apply {
-            firstName = binding.etFirstname.editText?.text?.toString()
-            lastName = binding.etLastName.editText?.text?.toString()
-            phoneNumber = binding.etPhone.editText?.text?.toString()
-            email = binding.etEmail.editText?.text?.toString()
-            //TODO add photo serialization
-        }
     }
 
     private fun onDeleteButtonPressed() {
@@ -79,10 +74,19 @@ class ContactDetailsFragment : Fragment() {
     }
 
     private fun onSaveButtonPressed() {
-        writeChangesToObj(contact)
         val bundle = Bundle().apply { putSerializable(ARG_SERIALIZED_CONTACT, contact) }
         setFragmentResult(SAVE_CONTACT_REQUEST_KEY, bundle)
         view?.clearFocus()
+    }
+
+    private class FieldWatcher(val contact: Contact, val storageProperty: KMutableProperty1<Contact, String?>) : TextWatcher {
+        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) { }
+
+        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { }
+
+        override fun afterTextChanged(s: Editable?) {
+            storageProperty.set(contact, s?.toString()?.ifEmpty { null })
+        }
     }
 
     companion object {

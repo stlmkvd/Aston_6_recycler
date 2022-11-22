@@ -54,7 +54,7 @@ class Repository private constructor(private val contentResolver: ContentResolve
                             email = getString(5)
                         }
                         else -> {
-                            thumbnailPhoto = getBlob(6)
+                            thumbnailPhoto = getBlob(6)?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
                         }
                     }
                 }
