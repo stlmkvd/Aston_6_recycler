@@ -9,4 +9,5 @@
     <string name="button_save_changes">save changes</string>
     <string name="btn_delete">delete</string>
     <string name="hint_contact_list">you have no contacts on device to display\ncreating new contacts is not implemented yet\nplease, create new ones with standart app </string>
+    <string name="hint_middle_name">middle name</string>
 </resources>

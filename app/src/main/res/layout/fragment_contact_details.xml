@@ -50,7 +50,7 @@
                     android:layout_marginVertical="16dp"
                     android:hint="@string/hint_first_name"
                     app:boxBackgroundColor="@color/white"
-                    app:layout_constraintBottom_toTopOf="@+id/et_last_name"
+                    app:layout_constraintBottom_toTopOf="@+id/et_middle_name"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.5"
                     app:layout_constraintStart_toStartOf="parent"
@@ -61,6 +61,28 @@
                         android:layout_height="match_parent"
                         android:inputType="textPersonName"
                         android:text="@{contact.firstName}" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/et_middle_name"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="32dp"
+                    android:layout_marginVertical="16dp"
+                    android:hint="@string/hint_middle_name"
+                    app:boxBackgroundColor="@color/white"
+                    app:layout_constraintBottom_toTopOf="@+id/et_last_name"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/et_firstname">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:inputType="textPersonName"
+                        android:text="@{contact.middleName}" />
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
@@ -76,7 +98,7 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.5"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/et_firstname">
+                    app:layout_constraintTop_toBottomOf="@+id/et_middle_name">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:layout_width="match_parent"

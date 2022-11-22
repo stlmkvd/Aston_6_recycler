@@ -50,6 +50,7 @@ class ContactDetailsFragment : Fragment() {
         binding.btnSaveContact.setOnClickListener { onSaveButtonPressed() }
         binding.btnDeleteContact.setOnClickListener { onDeleteButtonPressed() }
         binding.etFirstname.editText?.addTextChangedListener(FieldWatcher(contact, Contact::firstName))
+        binding.etMiddleName.editText?.addTextChangedListener(FieldWatcher(contact, Contact::middleName))
         binding.etLastName.editText?.addTextChangedListener(FieldWatcher(contact, Contact::lastName))
         binding.etPhone.editText?.addTextChangedListener(FieldWatcher(contact, Contact::phoneNumber))
         binding.etEmail.editText?.addTextChangedListener(FieldWatcher(contact, Contact::email))

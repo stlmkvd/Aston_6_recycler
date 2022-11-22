@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 data class Contact(
     val id: String? = null,
     var firstName: String? = null,
+    var middleName: String? = null,
     var lastName: String? = null,
     var phoneNumber: String? = null,
     var email: String? = null,
@@ -26,7 +27,7 @@ data class Contact(
         }
 
     fun getDisplayedName(): String{
-            return "${firstName ?: ""} ${lastName ?: ""}".trim()
+            return "${firstName ?: ""} ${middleName ?: ""} ${lastName ?: ""}".trim()
         }
 
     override fun equals(other: Any?): Boolean {
@@ -37,6 +38,7 @@ data class Contact(
 
         if (id != other.id) return false
         if (firstName != other.firstName) return false
+        if (middleName != other.middleName) return false
         if (lastName != other.lastName) return false
         if (phoneNumber != other.phoneNumber) return false
         if (email != other.email) return false
@@ -48,6 +50,7 @@ data class Contact(
     override fun hashCode(): Int {
         var result = id?.hashCode() ?: 0
         result = 31 * result + (firstName?.hashCode() ?: 0)
+        result = 31 * result + (middleName?.hashCode() ?: 0)
         result = 31 * result + (lastName?.hashCode() ?: 0)
         result = 31 * result + (phoneNumber?.hashCode() ?: 0)
         result = 31 * result + (email?.hashCode() ?: 0)

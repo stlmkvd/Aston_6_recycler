@@ -15,6 +15,7 @@ class Repository private constructor(private val contentResolver: ContentResolve
             ContactsContract.Data.MIMETYPE,
             ContactsContract.CommonDataKinds.StructuredName.GIVEN_NAME,
             ContactsContract.CommonDataKinds.StructuredName.FAMILY_NAME,
+            ContactsContract.CommonDataKinds.StructuredName.MIDDLE_NAME,
             ContactsContract.CommonDataKinds.Phone.NUMBER,
             ContactsContract.CommonDataKinds.Email.ADDRESS,
             ContactsContract.CommonDataKinds.Photo.PHOTO
@@ -45,16 +46,17 @@ class Repository private constructor(private val contentResolver: ContentResolve
                     when (mime) {
                         ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE -> {
                             firstName = getString(2)
-                            lastName = getString(3)
+                            middleName = getString(3)
+                            lastName = getString(4)
                         }
                         ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE -> {
-                            phoneNumber = getString(4)
+                            phoneNumber = getString(5)
                         }
                         ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE -> {
-                            email = getString(5)
+                            email = getString(6)
                         }
                         else -> {
-                            thumbnailPhoto = getBlob(6)?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
+                            thumbnailPhoto = getBlob(7)?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
                         }
                     }
                 }
@@ -74,7 +76,7 @@ class Repository private constructor(private val contentResolver: ContentResolve
         val removeOldEntries =
             ContentProviderOperation.newDelete(uri).withSelection(selection, arrayOf()).build()
         operations.add(removeOldEntries)
-        if (contact.firstName != null || contact.lastName != null) {
+        if (contact.firstName != null || contact.middleName != null ||contact.lastName != null) {
             val insertNameAndLastName = ContentProviderOperation.newInsert(uri)
                 .withValues(ContentValues().apply {
                     put(ContactsContract.Data.RAW_CONTACT_ID, contact.id)
@@ -85,6 +87,10 @@ class Repository private constructor(private val contentResolver: ContentResolve
                     put(
                         ContactsContract.CommonDataKinds.StructuredName.GIVEN_NAME,
                         contact.firstName
+                    )
+                    put(
+                        ContactsContract.CommonDataKinds.StructuredName.MIDDLE_NAME,
+                        contact.middleName
                     )
                     put(
                         ContactsContract.CommonDataKinds.StructuredName.FAMILY_NAME,
