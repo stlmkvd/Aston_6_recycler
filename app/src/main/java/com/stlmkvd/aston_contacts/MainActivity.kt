@@ -1,12 +1,16 @@
 package com.stlmkvd.aston_contacts
 
+import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.PersistableBundle
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.commit
+import androidx.lifecycle.LifecycleOwner
 import com.stlmkvd.aston_contacts.databinding.ActivityMainBinding
 
 private const val TAG = "MainActivity"
@@ -74,4 +78,9 @@ class MainActivity : AppCompatActivity() {
             )
         }
     }
+}
+
+fun Activity.setMenuProviderFor(menuProvider: MenuProvider, lifecycleOwner: LifecycleOwner) {
+    val menuHost = this as MenuHost
+    menuHost.addMenuProvider(menuProvider, lifecycleOwner)
 }

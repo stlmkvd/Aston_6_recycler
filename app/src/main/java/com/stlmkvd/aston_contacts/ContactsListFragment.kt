@@ -3,11 +3,14 @@ package com.stlmkvd.aston_contacts
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
+import android.widget.FrameLayout
+import android.widget.PopupWindow
 import androidx.activity.addCallback
+import androidx.appcompat.widget.SearchView
+import androidx.cardview.widget.CardView
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
 import androidx.lifecycle.ViewModelProvider
@@ -23,11 +26,27 @@ const val DELETE_CONTACT_REQUEST_KEY = "delete_contact"
 const val ARG_SERIALIZED_CONTACT = "contact"
 private const val ARG_FRAGMENT_RECREATED_MARKER = "recreated"
 
-class ContactsListFragment : Fragment() {
+class ContactsListFragment : Fragment(), SearchView.OnQueryTextListener {
 
     private lateinit var binding: FragmentContactsListBinding
     private lateinit var contactsAdapter: ContactsAdapter
     private lateinit var viewModel: ContactsViewModel
+    private lateinit var menuItemSearch: MenuItem
+    private val menuProvider = object : MenuProvider {
+        override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+            menuInflater.inflate(R.menu.list_menu, menu)
+
+            menuItemSearch = menu.findItem(R.id.search)
+            val searchView = menuItemSearch.actionView as SearchView
+            searchView.setOnQueryTextListener(this@ContactsListFragment)
+        }
+
+        override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+            return false
+        }
+    }
+
+    //-----------------lifecycle-----------------------------------------
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,7 +64,7 @@ class ContactsListFragment : Fragment() {
             }
         }
         viewModel = ViewModelProvider(this).get(ContactsViewModel::class.java)
-        Log.d(TAG, "oncreate")
+
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -57,9 +76,9 @@ class ContactsListFragment : Fragment() {
         contactsAdapter = ContactsAdapter()
         binding.recyclerView.adapter = contactsAdapter
         binding.slidingLayout.lockMode = SlidingPaneLayout.LOCK_MODE_LOCKED
-        Log.d(TAG, "oncreateview")
         return binding.root
     }
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -74,6 +93,7 @@ class ContactsListFragment : Fragment() {
             }
         })
         showOrHideHint()
+        requireActivity().setMenuProviderFor(menuProvider, viewLifecycleOwner)
         Log.d(TAG, "onViewCreated")
     }
 
@@ -98,7 +118,6 @@ class ContactsListFragment : Fragment() {
             deleteContact(contact)
         }
 
-        //set onBackPressed listener in activity
         with(requireActivity()) {
             onBackPressedDispatcher.addCallback {
                 val paneClosed = binding.slidingLayout.closePane()
@@ -106,8 +125,21 @@ class ContactsListFragment : Fragment() {
                 else finish()
             }
         }
-        Log.d(TAG, "onStart")
     }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        val currFragment = childFragmentManager.findFragmentByTag(ContactDetailsFragment.TAG)
+        currFragment?.let {
+            childFragmentManager.putFragment(
+                outState,
+                ContactDetailsFragment.TAG,
+                it
+            )
+        }
+    }
+
+    //----------------CRUD------------------------------------------
 
     private fun saveContact(contact: Contact) {
         closeDetailsIfCloseable()
@@ -130,8 +162,13 @@ class ContactsListFragment : Fragment() {
         }
     }
 
+    //------------------details pane controls-----------------------------------------------------
+
     private fun closeDetailsIfCloseable() {
-        if (binding.slidingLayout.closePane()) childFragmentManager.popBackStack()
+        if (binding.slidingLayout.closePane()) {
+            childFragmentManager.popBackStack()
+            showMenuItems()
+        }
     }
 
     private fun openDetailsFor(contact: Contact) {
@@ -146,19 +183,19 @@ class ContactsListFragment : Fragment() {
             addToBackStack("open details")
             setReorderingAllowed(true)
         }
-        binding.slidingLayout.openPane()
+        if (binding.slidingLayout.openPane()) hideMenuItems()
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        val currFragment = childFragmentManager.findFragmentByTag(ContactDetailsFragment.TAG)
-        currFragment?.let {
-            childFragmentManager.putFragment(
-                outState,
-                ContactDetailsFragment.TAG,
-                it
-            )
-        }
+    //----------------------UI--------------------------------
+
+    private fun showMenuItems() {
+        menuItemSearch.isVisible = true
+        menuItemSearch.isEnabled = true
+    }
+
+    private fun hideMenuItems() {
+        menuItemSearch.isVisible = false
+        menuItemSearch.isEnabled = false
     }
 
     private fun showOrHideHint() {
@@ -166,6 +203,55 @@ class ContactsListFragment : Fragment() {
             binding.hint.visibility = View.VISIBLE
         } else binding.hint.visibility = View.GONE
     }
+
+    private fun showPopupFor(contactView: View, contact: Contact) {
+        val popupView = layoutInflater.inflate(R.layout.popup_layout, null)
+
+        val width: Int = FrameLayout.LayoutParams.WRAP_CONTENT
+        val height: Int = FrameLayout.LayoutParams.WRAP_CONTENT
+
+        val coords = IntArray(2)
+        contactView.getLocationOnScreen(coords)
+
+        val popupWindow = PopupWindow(popupView, width, height, true)
+        popupWindow.isOutsideTouchable = true
+
+        popupView.findViewById<CardView>(R.id.card_view)
+            .setOnClickListener {
+                deleteContact(contact)
+                popupWindow.dismiss()
+            }
+        popupWindow.animationStyle = com.google.android.material.R.style.Animation_AppCompat_Dialog
+
+        popupWindow.showAtLocation(
+            contactView,
+            Gravity.END + Gravity.TOP,
+            50,
+            coords[1] + contactView.height * 3 / 5
+        )
+
+    }
+
+    override fun onQueryTextSubmit(query: String?): Boolean {
+        menuItemSearch.actionView?.clearFocus()
+        return false
+    }
+
+    override fun onQueryTextChange(newText: String?): Boolean {
+        if (newText != null) {
+            val filteredContacts =
+                viewModel.contacts.filter {
+                    it.getDisplayedName().contains(newText, true) || it.phoneNumber?.contains(
+                        newText,
+                        true
+                    ) ?: false
+                }
+            contactsAdapter.submitList(filteredContacts)
+        } else contactsAdapter.submitList(viewModel.contacts)
+        return true
+    }
+
+    //-----------------ADAPTER AND VIEWHOLDER--------------------------------
 
     private inner class ContactsAdapter : ListAdapter<Contact, ContactHolder>(ContactDiffCallback) {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ContactHolder {
@@ -192,8 +278,9 @@ class ContactsListFragment : Fragment() {
                 )
             )
             else binding.ivPhoto.setImageBitmap(contact.thumbnailPhoto)
-            binding.root.setOnClickListener {
-                openDetailsFor(contact)
+            with(binding.root) {
+                setOnClickListener { openDetailsFor(contact) }
+                setOnLongClickListener { showPopupFor(this, contact); true }
             }
         }
     }

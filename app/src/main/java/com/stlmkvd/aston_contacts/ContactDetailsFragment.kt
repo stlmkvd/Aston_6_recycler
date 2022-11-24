@@ -1,6 +1,5 @@
 package com.stlmkvd.aston_contacts
 
-import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -49,10 +48,30 @@ class ContactDetailsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.btnSaveContact.setOnClickListener { onSaveButtonPressed() }
         binding.btnDeleteContact.setOnClickListener { onDeleteButtonPressed() }
-        binding.etFirstname.editText?.addTextChangedListener(FieldWatcher(contact, Contact::firstName))
-        binding.etMiddleName.editText?.addTextChangedListener(FieldWatcher(contact, Contact::middleName))
-        binding.etLastName.editText?.addTextChangedListener(FieldWatcher(contact, Contact::lastName))
-        binding.etPhone.editText?.addTextChangedListener(FieldWatcher(contact, Contact::phoneNumber))
+        binding.etFirstname.editText?.addTextChangedListener(
+            FieldWatcher(
+                contact,
+                Contact::firstName
+            )
+        )
+        binding.etMiddleName.editText?.addTextChangedListener(
+            FieldWatcher(
+                contact,
+                Contact::middleName
+            )
+        )
+        binding.etLastName.editText?.addTextChangedListener(
+            FieldWatcher(
+                contact,
+                Contact::lastName
+            )
+        )
+        binding.etPhone.editText?.addTextChangedListener(
+            FieldWatcher(
+                contact,
+                Contact::phoneNumber
+            )
+        )
         binding.etEmail.editText?.addTextChangedListener(FieldWatcher(contact, Contact::email))
         binding.ivPhoto.setOnClickListener {
             Toast.makeText(
@@ -80,10 +99,13 @@ class ContactDetailsFragment : Fragment() {
         view?.clearFocus()
     }
 
-    private class FieldWatcher(val contact: Contact, val storageProperty: KMutableProperty1<Contact, String?>) : TextWatcher {
-        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) { }
+    private class FieldWatcher(
+        val contact: Contact,
+        val storageProperty: KMutableProperty1<Contact, String?>
+    ) : TextWatcher {
+        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
-        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { }
+        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
 
         override fun afterTextChanged(s: Editable?) {
             storageProperty.set(contact, s?.toString()?.ifEmpty { null })

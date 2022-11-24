@@ -26,9 +26,9 @@ data class Contact(
                     email == null
         }
 
-    fun getDisplayedName(): String{
-            return "${firstName ?: ""} ${middleName ?: ""} ${lastName ?: ""}".trim()
-        }
+    fun getDisplayedName(): String {
+        return "${firstName ?: ""} ${middleName ?: ""} ${lastName ?: ""}".trim()
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
