@@ -1,4 +1,4 @@
-# Aston_5_fragments
+# Aston_6_recycler
 Contacts manager app.
 Created for Aston.
 Сделано со всеми усложнениями.
