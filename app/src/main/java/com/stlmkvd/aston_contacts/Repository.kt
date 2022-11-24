@@ -6,9 +6,9 @@ import android.content.ContentValues
 import android.graphics.BitmapFactory
 import android.provider.ContactsContract
 
-class Repository private constructor(private val contentResolver: ContentResolver) {
+open class Repository protected constructor(private val contentResolver: ContentResolver) {
 
-    fun loadContactsFromDataBase(): MutableList<Contact> {
+    open fun loadContactsFromDataBase(): MutableList<Contact> {
         val list: MutableList<Contact> = mutableListOf()
         val projection = arrayOf(
             ContactsContract.Data.RAW_CONTACT_ID,
@@ -56,7 +56,8 @@ class Repository private constructor(private val contentResolver: ContentResolve
                             email = getString(6)
                         }
                         else -> {
-                            thumbnailPhoto = getBlob(7)?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
+                            thumbnailPhoto =
+                                getBlob(7)?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
                         }
                     }
                 }
@@ -68,7 +69,7 @@ class Repository private constructor(private val contentResolver: ContentResolve
         return list
     }
 
-    fun updateContactInDatabase(contact: Contact) {
+    open fun updateContactInDatabase(contact: Contact) {
         val operations = ArrayList<ContentProviderOperation>()
         val uri = ContactsContract.Data.CONTENT_URI
         val selection =
@@ -76,7 +77,7 @@ class Repository private constructor(private val contentResolver: ContentResolve
         val removeOldEntries =
             ContentProviderOperation.newDelete(uri).withSelection(selection, arrayOf()).build()
         operations.add(removeOldEntries)
-        if (contact.firstName != null || contact.middleName != null ||contact.lastName != null) {
+        if (contact.firstName != null || contact.middleName != null || contact.lastName != null) {
             val insertNameAndLastName = ContentProviderOperation.newInsert(uri)
                 .withValues(ContentValues().apply {
                     put(ContactsContract.Data.RAW_CONTACT_ID, contact.id)
@@ -139,7 +140,7 @@ class Repository private constructor(private val contentResolver: ContentResolve
         contentResolver.applyBatch(ContactsContract.AUTHORITY, operations)
     }
 
-    fun deleteContactFromDataBase(contact: Contact) {
+    open fun deleteContactFromDataBase(contact: Contact) {
         contentResolver.delete(
             ContactsContract.RawContacts.CONTENT_URI,
             "${ContactsContract.RawContacts._ID} = ${contact.id}",
@@ -161,3 +162,4 @@ class Repository private constructor(private val contentResolver: ContentResolve
             }
     }
 }
+

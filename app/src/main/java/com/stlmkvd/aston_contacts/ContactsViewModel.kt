@@ -7,13 +7,12 @@ private const val TAG = "ContactsViewModel"
 
 class ContactsViewModel : ViewModel() {
 
-    private val repository = Repository.getInstance()
-    lateinit var contacts: MutableList<Contact>
-        private set
+    private val repository = FakeRepository.getInstance()
+    var contacts: MutableList<Contact> = emptyList<Contact>().toMutableList()
 
-    init {
-        loadContacts()
-    }
+//    init {
+//        loadContacts()
+//    }
 
     fun loadContacts() {
         contacts = repository.loadContactsFromDataBase()

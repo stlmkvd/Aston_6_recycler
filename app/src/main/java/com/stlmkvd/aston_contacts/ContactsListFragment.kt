@@ -1,7 +1,9 @@
 package com.stlmkvd.aston_contacts
 
 import android.annotation.SuppressLint
-import android.os.Bundle
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.os.*
 import android.util.Log
 import android.view.*
 import android.widget.FrameLayout
@@ -15,16 +17,19 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.slidingpanelayout.widget.SlidingPaneLayout
 import com.stlmkvd.aston_contacts.databinding.FragmentContactsListBinding
 import com.stlmkvd.aston_contacts.databinding.ListItemContactBinding
+import de.hdodenhof.circleimageview.CircleImageView
+import java.net.URL
 
 const val SAVE_CONTACT_REQUEST_KEY = "contact_updated"
 const val DELETE_CONTACT_REQUEST_KEY = "delete_contact"
 const val ARG_SERIALIZED_CONTACT = "contact"
-private const val ARG_FRAGMENT_RECREATED_MARKER = "recreated"
+private val URL_IMAGES = URL("https://picsum.photos/100")
 
 class ContactsListFragment : Fragment(), SearchView.OnQueryTextListener {
 
@@ -64,7 +69,6 @@ class ContactsListFragment : Fragment(), SearchView.OnQueryTextListener {
             }
         }
         viewModel = ViewModelProvider(this).get(ContactsViewModel::class.java)
-
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -74,7 +78,6 @@ class ContactsListFragment : Fragment(), SearchView.OnQueryTextListener {
     ): View {
         binding = FragmentContactsListBinding.inflate(inflater, container, false)
         contactsAdapter = ContactsAdapter()
-        binding.recyclerView.adapter = contactsAdapter
         binding.slidingLayout.lockMode = SlidingPaneLayout.LOCK_MODE_LOCKED
         return binding.root
     }
@@ -82,16 +85,7 @@ class ContactsListFragment : Fragment(), SearchView.OnQueryTextListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.recyclerView.addOnChildAttachStateChangeListener(object :
-            RecyclerView.OnChildAttachStateChangeListener {
-            override fun onChildViewAttachedToWindow(view: View) {
-                showOrHideHint()
-            }
-
-            override fun onChildViewDetachedFromWindow(view: View) {
-                showOrHideHint()
-            }
-        })
+        prepareRecycler()
         showOrHideHint()
         requireActivity().setMenuProviderFor(menuProvider, viewLifecycleOwner)
         Log.d(TAG, "onViewCreated")
@@ -99,8 +93,7 @@ class ContactsListFragment : Fragment(), SearchView.OnQueryTextListener {
 
     override fun onStart() {
         super.onStart()
-        viewModel.loadContacts()
-        contactsAdapter.submitList(viewModel.contacts)
+        loadContacts()
         childFragmentManager.setFragmentResultListener(
             SAVE_CONTACT_REQUEST_KEY,
             viewLifecycleOwner
@@ -153,6 +146,11 @@ class ContactsListFragment : Fragment(), SearchView.OnQueryTextListener {
         }
     }
 
+    private fun loadContacts() {
+        viewModel.loadContacts()
+        contactsAdapter.submitList(viewModel.contacts)
+    }
+
     private fun deleteContact(contact: Contact) {
         closeDetailsIfCloseable()
         childFragmentManager.popBackStack()
@@ -187,6 +185,32 @@ class ContactsListFragment : Fragment(), SearchView.OnQueryTextListener {
     }
 
     //----------------------UI--------------------------------
+
+    private fun prepareRecycler() {
+        binding.recyclerView.apply {
+            adapter = contactsAdapter
+            val dividerItemDecoration =
+                DividerItemDecoration(requireContext(), RecyclerView.VERTICAL)
+            dividerItemDecoration.setDrawable(
+                ResourcesCompat.getDrawable(
+                    resources,
+                    R.drawable.recycler_divider,
+                    null
+                )!!
+            )
+            addItemDecoration(dividerItemDecoration)
+            addOnChildAttachStateChangeListener(object :
+                RecyclerView.OnChildAttachStateChangeListener {
+                override fun onChildViewAttachedToWindow(view: View) {
+                    showOrHideHint()
+                }
+
+                override fun onChildViewDetachedFromWindow(view: View) {
+                    showOrHideHint()
+                }
+            })
+        }
+    }
 
     private fun showMenuItems() {
         menuItemSearch.isVisible = true
@@ -232,6 +256,26 @@ class ContactsListFragment : Fragment(), SearchView.OnQueryTextListener {
 
     }
 
+    private fun downloadRandomImageInto(civ: CircleImageView, contact: Contact) {
+        lateinit var bitmap: Bitmap
+        val handler = object : Handler(Looper.getMainLooper()) {
+            override fun handleMessage(msg: Message) {
+                contact.thumbnailPhoto = bitmap
+                civ.setImageBitmap(bitmap)
+            }
+        }
+        handler.post {
+            Thread {
+                val connection = URL_IMAGES.openConnection().apply {
+                    doInput = true;
+                    connect()
+                }
+                bitmap = BitmapFactory.decodeStream(connection.getInputStream())
+                handler.sendMessage(Message())
+            }.start()
+        }
+    }
+
     override fun onQueryTextSubmit(query: String?): Boolean {
         menuItemSearch.actionView?.clearFocus()
         return false
@@ -270,14 +314,10 @@ class ContactsListFragment : Fragment(), SearchView.OnQueryTextListener {
         fun bind(contact: Contact) {
             binding.contact = contact
             binding.executePendingBindings()
-            if (contact.thumbnailPhoto == null) binding.ivPhoto.setImageDrawable(
-                ResourcesCompat.getDrawable(
-                    resources,
-                    R.drawable.profile,
-                    null
-                )
-            )
-            else binding.ivPhoto.setImageBitmap(contact.thumbnailPhoto)
+            if (contact.thumbnailPhoto == null) {
+                binding.ivPhoto.setImageResource(R.drawable.profile)
+                downloadRandomImageInto(binding.ivPhoto, contact)
+            } else binding.ivPhoto.setImageBitmap(contact.thumbnailPhoto)
             with(binding.root) {
                 setOnClickListener { openDetailsFor(contact) }
                 setOnLongClickListener { showPopupFor(this, contact); true }

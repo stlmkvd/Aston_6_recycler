@@ -13,14 +13,13 @@ import androidx.fragment.app.commit
 import androidx.lifecycle.LifecycleOwner
 import com.stlmkvd.aston_contacts.databinding.ActivityMainBinding
 
-private const val TAG = "MainActivity"
-
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        grantPermissons()
         if (savedInstanceState != null) {
             val fragment =
                 supportFragmentManager.getFragment(savedInstanceState, ContactsListFragment.TAG)
@@ -48,7 +47,6 @@ class MainActivity : AppCompatActivity() {
                 setReorderingAllowed(true)
             }
         }
-        grantPermissons()
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
     }
 

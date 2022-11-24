@@ -12,9 +12,6 @@ data class Contact(
     var thumbnailPhoto: Bitmap? = null
 ) : java.io.Serializable {
 
-    val hasDetails: Boolean
-        get() = email != null || thumbnailPhoto != null
-
     val isNew: Boolean
         get() = id == null
 
@@ -56,9 +53,5 @@ data class Contact(
         result = 31 * result + (email?.hashCode() ?: 0)
         result = 31 * result + (thumbnailPhoto?.hashCode() ?: 0)
         return result
-    }
-
-    companion object {
-        const val ARG_KEY = "contact"
     }
 }

@@ -5,6 +5,6 @@ import android.app.Application
 class ContactsApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        Repository.init(contentResolver)
+        FakeRepository.init(contentResolver)
     }
 }
